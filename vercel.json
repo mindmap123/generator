@@ -2,6 +2,10 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/init-data",
+      "destination": "/api/init-data.js"
+    },
+    {
       "source": "/api/auth/login",
       "destination": "/api/auth/login.js"
     },
@@ -44,6 +48,10 @@
     {
       "source": "/quick-import",
       "destination": "/public/quick-import.html"
+    },
+    {
+      "source": "/init",
+      "destination": "/public/init.html"
     },
     {
       "source": "/",
