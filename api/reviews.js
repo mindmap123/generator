@@ -1,8 +1,8 @@
-import { kv } from '@vercel/kv';
-import { randomUUID } from 'crypto';
-import { requireRole } from '../../auth';
+const { kv } = require('@vercel/kv');
+const { randomUUID } = require('crypto');
+const { requireRole } = require('../../auth');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { method } = req;
 
   try {

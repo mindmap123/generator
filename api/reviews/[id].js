@@ -1,7 +1,7 @@
-import { kv } from '@vercel/kv';
-import { requireRole } from '../../auth';
+const { kv } = require('@vercel/kv');
+const { requireRole } = require('../../auth');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { method, query } = req;
   const { id } = query;
 
