@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Interface complète</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f7f4;
+      --surface: #ffffff;
+      --surface2: #f2f0ec;
+      --border: #dedad4;
+      --text: #1a1a1a;
+      --muted: #888;
+      --accent: #b8922a;
+      --accent-bg: #fdf6e8;
+      --accent-border: #e8d09a;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    .nav {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 48px;
+    }
+
+    .nav-brand { font-size: 14px; font-weight: 600; color: var(--text); margin-right: 24px; }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      height: 100%;
+      padding: 0 14px;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s;
+    }
+
+    .nav-link:hover { color: var(--text); }
+    .nav-link.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+    .page { max-width: 1200px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s;
+    }
+
+    .card:hover { transform: translateY(-2px); }
+
+    .card-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .card-link {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      transition: opacity 0.15s;
+    }
+
+    .card-link:hover { opacity: 0.88; }
+
+    .section {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 16px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+<script src="/auth-client.js"></script>
+
+<nav class="nav">
+  <span class="nav-brand">👑 Admin</span>
+  <a class="nav-link active" href="/admin">Dashboard</a>
+  <a class="nav-link" href="/">Générateur</a>
+  <a class="nav-link" href="/dashboard">Dashboard complet</a>
+  <a class="nav-link" href="/poster">Interface Poster</a>
+</nav>
+
+<div class="page">
+  <h1>Interface Admin</h1>
+  <p class="subtitle">Accès complet à tous les outils de gestion des avis</p>
+
+  <div class="section">
+    <div class="section-title">📊 Statistiques rapides</div>
+    <div class="quick-stats" id="stats"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-icon">✨</div>
+      <div class="card-title">Générateur d'avis</div>
+      <div class="card-desc">Créez des avis Google réalistes avec Claude AI. Configurez les paramètres et générez en masse.</div>
+      <a href="/" class="card-link">Ouvrir le générateur →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">📋</div>
+      <div class="card-title">Dashboard complet</div>
+      <div class="card-desc">Vue complète avec tous les statuts, timeline, import d'anciens avis et statistiques détaillées.</div>
+      <a href="/dashboard" class="card-link">Ouvrir le dashboard →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <div class="card-title">Interface Poster</div>
+      <div class="card-desc">Interface simplifiée pour l'équipe qui poste les avis et vérifie leur présence en ligne.</div>
+      <a href="/poster" class="card-link">Ouvrir l'interface →</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔗 Liens rapides</div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <a href="/" class="card-link">Générateur</a>
+      <a href="/dashboard" class="card-link">Dashboard</a>
+      <a href="/poster" class="card-link">Poster</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/reviews');
+      const reviews = await res.json();
+      
+      const total = reviews.length;
+      const pending = reviews.filter(r => r.status === 'pending').length;
+      const posted = reviews.filter(r => r.status === 'posted').length;
+      const disappeared = reviews.filter(r => r.status === 'disappeared').length;
+      const generated = reviews.filter(r => r.source === 'generated').length;
+      const historical = reviews.filter(r => r.source === 'historical').length;
+
+      document.getElementById('stats').innerHTML = `
+        <div class="stat">
+          <div class="stat-value">${total}</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${pending}</div>
+          <div class="stat-label">À poster</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${posted}</div>
+          <div class="stat-label">Postés</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${disappeared}</div>
+          <div class="stat-label">Disparus</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${generated}</div>
+          <div class="stat-label">Générés</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${historical}</div>
+          <div class="stat-label">Historiques</div>
+        </div>
+      `;
+    } catch (e) {
+      console.error('Erreur chargement stats:', e);
+    }
+  }
+
+  loadStats();
+</script>
+</body>
+</html>

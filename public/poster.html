@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poster — Reviews to Post</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f7f4;
+      --surface: #ffffff;
+      --surface2: #f2f0ec;
+      --border: #dedad4;
+      --text: #1a1a1a;
+      --muted: #888;
+      --accent: #b8922a;
+      --accent-bg: #fdf6e8;
+      --accent-border: #e8d09a;
+      --success: #2e7d5e;
+      --success-bg: #edf7f3;
+      --success-border: #a8d9c5;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    .nav {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 48px;
+    }
+
+    .nav-brand { font-size: 14px; font-weight: 600; color: var(--text); margin-right: 24px; }
+
+    .page { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+
+    .tabs {
+      display: flex;
+      border-bottom: 0.5px solid var(--border);
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .review-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .review-meta { display: flex; gap: 12px; align-items: center; }
+    .review-author { font-size: 13px; font-weight: 600; }
+    .review-stars { font-size: 14px; color: var(--accent); letter-spacing: -1px; }
+    .review-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--accent-bg); border: 0.5px solid var(--accent-border); color: var(--accent); }
+
+    .review-text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #444;
+      margin-bottom: 12px;
+    }
+
+    .review-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 7px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+      border: 0.5px solid;
+      transition: all 0.15s;
+    }
+
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-success { background: var(--success-bg); border-color: var(--success-border); color: var(--success); }
+    .btn-success:hover { background: var(--success); color: #fff; }
+
+    .btn-secondary { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+    .btn-secondary:hover { background: var(--surface); }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .empty-state-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      padding: 28px 28px 24px;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .modal .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .modal label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+
+    .modal input[type=text] {
+      width: 100%;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: inherit;
+      margin-bottom: 20px;
+    }
+
+    .modal input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    .btn-cancel { padding: 9px 18px; border-radius: var(--radius-sm); background: var(--surface); border: 0.5px solid var(--border); font-size: 13px; cursor: pointer; color: var(--muted); font-family: inherit; }
+    .btn-confirm { padding: 9px 18px; border-radius: var(--radius-sm); background: var(--success); border: none; font-size: 13px; font-weight: 600; cursor: pointer; color: #fff; font-family: inherit; }
+    .btn-confirm:hover { opacity: 0.88; }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-label { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: var(--accent); }
+  </style>
+</head>
+<body>
+<script src="/auth-client.js"></script>
+
+<nav class="nav">
+  <span class="nav-brand">🎯 Poster Interface</span>
+</nav>
+
+<div class="page">
+  <h1>Review Management</h1>
+  <p class="subtitle">Post pending reviews and check those already online</p>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">To Post</div>
+      <div class="stat-value" id="stat-pending">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Online</div>
+      <div class="stat-value" id="stat-posted">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Gone</div>
+      <div class="stat-value" id="stat-gone">—</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('pending')">📝 To Post</button>
+    <button class="tab" onclick="switchTab('posted')">✅ Check Online</button>
+    <button class="tab" onclick="switchTab('gone')">❌ Gone</button>
+  </div>
+
+  <div id="section-pending" class="section active">
+    <div id="pending-list"></div>
+  </div>
+
+  <div id="section-posted" class="section">
+    <div id="posted-list"></div>
+  </div>
+
+  <div id="section-gone" class="section">
+    <div id="gone-list"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <h3>Mark as Posted</h3>
+    <p class="modal-sub">Enter the Google account name used to post this review.</p>
+    <label>Google Account Name</label>
+    <input type="text" id="modal-compte" placeholder="e.g. Flavie Giroux" autocomplete="off" />
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmPosted()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let reviews = [];
+  let currentReviewId = null;
+
+  function starsStr(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+  async function loadReviews() {
+    try {
+      const res = await fetch('/api/reviews');
+      reviews = await res.json();
+      updateStats();
+      renderPending();
+      renderPosted();
+      renderGone();
+    } catch (e) {
+      console.error('Erreur chargement:', e);
+    }
+  }
+
+  function updateStats() {
+    const pending = reviews.filter(r => r.status === 'pending').length;
+    const posted = reviews.filter(r => r.status === 'posted').length;
+    const gone = reviews.filter(r => r.status === 'disappeared').length;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-posted').textContent = posted;
+    document.getElementById('stat-gone').textContent = gone;
+  }
+
+  function renderPending() {
+    const list = document.getElementById('pending-list');
+    const pending = reviews.filter(r => r.status === 'pending');
+
+    if (!pending.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div>No pending reviews</div>';
+      return;
+    }
+
+    list.innerHTML = pending.map(r => `
+      <div class="review-card">
+        <div class="review-header">
+          <div class="review-meta">
+            <span class="review-author">${r.auteur_fictif || r.auteur || 'Anonymous'}</span>
+            <span class="review-stars">${starsStr(r.note || 5)}</span>
+            ${r.prestation ? `<span class="review-badge">${r.prestation}</span>` : ''}
+          </div>
+        </div>
+        <div class="review-text">${r.texte}</div>
+        <div class="review-actions">
+          <button class="btn btn-primary" onclick="openModal('${r.id}')">✓ Mark as Posted</button>
+          <button class="btn btn-secondary" onclick="copyText('${r.id}')">📋 Copy</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderPosted() {
+    const list = document.getElementById('posted-list');
+    const posted = reviews.filter(r => r.status === 'posted');
+
+    if (!posted.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div>No posted reviews</div>';
+      return;
+    }
+
+    list.innerHTML = posted.map(r => `
+      <div class="review-card">
+        <div class="review-header">
+          <div class="review-meta">
+            <span class="review-author">${r.compte_google || 'No account name'}</span>
+            <span class="review-stars">${starsStr(r.note || 5)}</span>
+            ${r.prestation ? `<span class="review-badge">${r.prestation}</span>` : ''}
+          </div>
+        </div>
+        <div class="review-text">${r.texte}</div>
+        <div class="review-actions">
+          <button class="btn btn-success" onclick="markStillThere('${r.id}')">✓ Still There</button>
+          <button class="btn btn-secondary" onclick="markGone('${r.id}')">❌ Gone</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderGone() {
+    const list = document.getElementById('gone-list');
+    const gone = reviews.filter(r => r.status === 'disappeared');
+
+    if (!gone.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div>No disappeared reviews</div>';
+      return;
+    }
+
+    list.innerHTML = gone.map(r => `
+      <div class="review-card">
+        <div class="review-header">
+          <div class="review-meta">
+            <span class="review-author">${r.compte_google || 'No account name'}</span>
+            <span class="review-stars">${starsStr(r.note || 5)}</span>
+            ${r.prestation ? `<span class="review-badge">${r.prestation}</span>` : ''}
+          </div>
+        </div>
+        <div class="review-text">${r.texte}</div>
+        <div class="review-actions">
+          <button class="btn btn-primary" onclick="reactivateReview('${r.id}')">🔄 Reactivate</button>
+          <button class="btn btn-secondary" onclick="copyText('${r.id}')">📋 Copy</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    
+    if (tab === 'pending') {
+      document.querySelectorAll('.tab')[0].classList.add('active');
+      document.getElementById('section-pending').classList.add('active');
+    } else if (tab === 'posted') {
+      document.querySelectorAll('.tab')[1].classList.add('active');
+      document.getElementById('section-posted').classList.add('active');
+    } else if (tab === 'gone') {
+      document.querySelectorAll('.tab')[2].classList.add('active');
+      document.getElementById('section-gone').classList.add('active');
+    }
+  }
+
+  function openModal(id) {
+    currentReviewId = id;
+    document.getElementById('modal-compte').value = '';
+    document.getElementById('modal-backdrop').classList.add('open');
+    setTimeout(() => document.getElementById('modal-compte').focus(), 100);
+  }
+
+  function closeModal() {
+    document.getElementById('modal-backdrop').classList.remove('open');
+    currentReviewId = null;
+  }
+
+  async function confirmPosted() {
+    const compte = document.getElementById('modal-compte').value.trim();
+    if (!compte) {
+      document.getElementById('modal-compte').focus();
+      return;
+    }
+
+    try {
+      await fetch(`/api/reviews/${currentReviewId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'posted',
+          compte_google: compte,
+          posted_at: new Date().toISOString()
+        })
+      });
+      closeModal();
+      await loadReviews();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  async function markStillThere(id) {
+    try {
+      await fetch(`/api/reviews/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          last_checked_at: new Date().toISOString()
+        })
+      });
+      await loadReviews();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  async function markGone(id) {
+    if (!confirm('Confirm that this review has disappeared?')) return;
+    
+    try {
+      await fetch(`/api/reviews/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'disappeared',
+          disappeared_at: new Date().toISOString()
+        })
+      });
+      await loadReviews();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  async function reactivateReview(id) {
+    try {
+      await fetch(`/api/reviews/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'posted',
+          disappeared_at: null
+        })
+      });
+      await loadReviews();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  function copyText(id) {
+    const r = reviews.find(x => x.id === id);
+    if (!r) return;
+    navigator.clipboard.writeText(r.texte);
+  }
+
+  document.getElementById('modal-compte').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmPosted();
+  });
+
+  document.getElementById('modal-backdrop').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-backdrop')) closeModal();
+  });
+
+  loadReviews();
+</script>
+</body>
+</html>

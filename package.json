@@ -1,0 +1,16 @@
+{
+  "name": "avis-generator",
+  "version": "1.0.0",
+  "description": "Google Reviews Generator with OpenRouter",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@vercel/kv": "^1.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

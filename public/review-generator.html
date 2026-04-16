@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Générateur d'avis — Salon de coiffure</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f7f4;
+      --surface: #ffffff;
+      --surface2: #f2f0ec;
+      --border: #dedad4;
+      --text: #1a1a1a;
+      --muted: #888;
+      --accent: #b8922a;
+      --accent-dim: #a07d20;
+      --accent-bg: #fdf6e8;
+      --accent-border: #e8d09a;
+      --danger: #c94040;
+      --success: #3a9060;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .container { width: 100%; max-width: 680px; }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .api-banner {
+      background: var(--accent-bg);
+      border: 0.5px solid var(--accent-border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+
+    .block { margin-bottom: 20px; }
+
+    .slabel {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    input[type=text], input[type=number] {
+      width: 100%;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: inherit;
+      transition: border-color 0.15s;
+      box-shadow: var(--shadow);
+    }
+
+    input[type=text]:focus, input[type=number]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    input[type=text]::placeholder, input[type=number]::placeholder { color: #bbb; }
+
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .tag {
+      padding: 5px 13px;
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: inherit;
+      transition: all 0.15s;
+      user-select: none;
+      box-shadow: var(--shadow);
+    }
+
+    .tag:hover { border-color: var(--accent); color: var(--accent); }
+    .tag.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+
+    .stars { display: flex; gap: 6px; }
+
+    .star {
+      font-size: 26px;
+      cursor: pointer;
+      color: var(--border);
+      transition: color 0.1s;
+      line-height: 1;
+    }
+
+    .star.on { color: var(--accent); }
+
+    /* Coiffeurs chips */
+    .coiffeurs-wrap {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      box-shadow: var(--shadow);
+      min-height: 44px;
+    }
+
+    .chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .chips-list:empty { margin-bottom: 0; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--accent-bg);
+      border: 0.5px solid var(--accent-border);
+      border-radius: 20px;
+      padding: 3px 10px 3px 12px;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .chip-role {
+      font-size: 11px;
+      color: var(--accent-dim);
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    .chip-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--accent-dim);
+      padding: 0;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      opacity: 0.7;
+      transition: opacity 0.15s;
+    }
+
+    .chip-remove:hover { opacity: 1; }
+
+    .add-coiffeur-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .add-coiffeur-row input[type=text] {
+      flex: 1;
+      padding: 5px 10px;
+      font-size: 13px;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      outline: none;
+      color: var(--text);
+    }
+
+    .add-coiffeur-row input[type=text]::placeholder { color: #bbb; }
+
+    .role-select {
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .role-select:focus { outline: none; border-color: var(--accent); }
+
+    .add-chip-btn {
+      background: var(--accent-bg);
+      border: 0.5px solid var(--accent-border);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      font-size: 13px;
+      color: var(--accent);
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .add-chip-btn:hover { background: var(--accent); color: #fff; }
+
+    .coiffeuse-option {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .check-label input[type=checkbox] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent);
+    }
+
+    .options-row { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    /* Master prompt */
+    .master-prompt-area {
+      width: 100%;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: inherit;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 80px;
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s;
+    }
+
+    .master-prompt-area:focus { outline: none; border-color: var(--accent); }
+    .master-prompt-area::placeholder { color: #bbb; font-style: italic; }
+
+    .mode-toggle {
+      display: flex;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 8px;
+      background: var(--surface);
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+
+    .mode-btn.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+
+    .qty-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .qty-row label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+    input[type=range] {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+
+    .qty-val { font-size: 14px; font-weight: 500; min-width: 20px; }
+
+    .auto-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .auto-row label { font-size: 13px; color: var(--muted); }
+    .auto-row input[type=number] { width: 70px; text-align: center; }
+    .auto-row span { font-size: 13px; color: var(--muted); }
+
+    .progress-wrap {
+      height: 2px;
+      background: var(--surface2);
+      border-radius: 2px;
+      margin-bottom: 6px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .btn-row { display: flex; gap: 8px; margin-bottom: 24px; }
+
+    .gen-btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: var(--radius-sm);
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
+      box-shadow: 0 2px 6px rgba(184,146,42,0.25);
+    }
+
+    .gen-btn:hover { opacity: 0.88; }
+    .gen-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .stop-btn {
+      padding: 11px 20px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      display: none;
+      box-shadow: var(--shadow);
+    }
+
+    .stop-btn:hover { background: var(--surface2); color: var(--text); }
+
+    .results { display: flex; flex-direction: column; gap: 10px; }
+
+    .review-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .review-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .review-name { font-size: 13px; font-weight: 600; color: var(--text); }
+
+    .review-stars { font-size: 14px; color: var(--accent); letter-spacing: -1px; }
+
+    .review-text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #444;
+    }
+
+    .badges { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 9px;
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      color: var(--muted);
+      background: var(--surface2);
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 9px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { color: var(--success); border-color: var(--success); }
+
+    .copy-all-btn {
+      width: 100%;
+      padding: 9px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: inherit;
+      margin-top: 6px;
+      transition: all 0.15s;
+      box-shadow: var(--shadow);
+    }
+
+    .copy-all-btn:hover { background: var(--surface2); color: var(--text); }
+
+    .spinner {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    hr {
+      border: none;
+      border-top: 0.5px solid var(--border);
+      margin-bottom: 20px;
+    }
+    /* Nav */
+    .nav {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 48px;
+      gap: 0;
+      margin-bottom: 0;
+    }
+
+    .nav-brand {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-right: 24px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      height: 100%;
+      padding: 0 14px;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s;
+    }
+
+    .nav-link:hover { color: var(--text); }
+    .nav-link.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+    body { padding-top: 0; }
+    .container { padding-top: 28px; }
+
+    /* Dashboard btn on cards */
+    .save-btn {
+      position: absolute;
+      top: 14px;
+      right: 80px;
+      background: var(--accent-bg);
+      border: 0.5px solid var(--accent-border);
+      border-radius: var(--radius-sm);
+      padding: 4px 9px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--accent);
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .save-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .save-btn.saved { color: var(--success); border-color: var(--success-border, #a8d9c5); background: var(--surface2); cursor: default; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">Salon</span>
+  <a class="nav-link active" href="/">Générateur</a>
+  <a class="nav-link" href="/dashboard">Dashboard</a>
+</nav>
+
+<div class="container">
+  <h1>Générateur d'avis — Salon de coiffure</h1>
+
+  <div class="api-banner">
+    <span class="status-dot"></span>
+    <span>Connecté à OpenRouter (Claude 3.5 Sonnet)</span>
+  </div>
+
+  <div class="block">
+    <div class="grid2">
+      <div>
+        <div class="slabel">Nom du salon</div>
+        <input type="text" id="salon" placeholder="ex. Salon Élise" />
+      </div>
+      <div>
+        <div class="slabel">Ville</div>
+        <input type="text" id="ville" placeholder="ex. Bordeaux" />
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="slabel">Prestations (sélection multiple)</div>
+    <div class="tags" id="presta-tags">
+      <button class="tag active" data-v="coupe femme">Coupe femme</button>
+      <button class="tag active" data-v="coupe homme">Coupe homme</button>
+      <button class="tag active" data-v="balayage">Balayage</button>
+      <button class="tag" data-v="couleur">Couleur</button>
+      <button class="tag" data-v="mèches">Mèches</button>
+      <button class="tag" data-v="brushing">Brushing</button>
+      <button class="tag" data-v="permanente">Permanente</button>
+      <button class="tag" data-v="soin">Soin</button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="slabel">Équipe</div>
+    <div class="coiffeurs-wrap">
+      <div class="chips-list" id="chips-list"></div>
+      <div class="add-coiffeur-row">
+        <input type="text" id="coiffeur-input" placeholder="Prénom…" />
+        <select class="role-select" id="coiffeur-role">
+          <option value="coiffeuse">coiffeuse</option>
+          <option value="coiffeur">coiffeur</option>
+          <option value="coloriste">coloriste</option>
+          <option value="styliste">styliste</option>
+        </select>
+        <button class="add-chip-btn" onclick="addCoiffeur()">+</button>
+      </div>
+    </div>
+    <div class="coiffeuse-option">
+      <label class="check-label">
+        <input type="checkbox" id="mention-coiffeuse" checked /> Mentionner l'équipe dans les avis (~40%)
+      </label>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="slabel">Note</div>
+    <div class="stars" id="stars">
+      <span class="star on" data-v="1">★</span>
+      <span class="star on" data-v="2">★</span>
+      <span class="star on" data-v="3">★</span>
+      <span class="star on" data-v="4">★</span>
+      <span class="star on" data-v="5">★</span>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="slabel">Longueur</div>
+    <div class="tags" id="len-tabs">
+      <button class="tag active" data-v="court">Court</button>
+      <button class="tag" data-v="moyen">Moyen</button>
+      <button class="tag" data-v="long">Long</button>
+      <button class="tag" data-v="mixte">Mixte</button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="slabel">Options</div>
+    <div class="options-row">
+      <label class="check-label"><input type="checkbox" id="opt-fautes" checked /> Imperfections mineures</label>
+      <label class="check-label"><input type="checkbox" id="opt-emojis" /> Emojis</label>
+      <label class="check-label"><input type="checkbox" id="opt-fidelite" /> Mentionner la fidélité</label>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="slabel">Instructions personnalisées (master prompt)</div>
+    <textarea
+      class="master-prompt-area"
+      id="master-prompt"
+      placeholder="ex. Le salon est réputé pour son expertise sur cheveux bouclés. Ambiance chaleureuse et familiale. Spécialité : coloration végétale bio. Prix justes, clientèle fidèle depuis des années…"
+    ></textarea>
+  </div>
+
+  <hr />
+
+  <div class="slabel">Mode</div>
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="mode-manuel" onclick="setMode('manuel')">Manuel</button>
+    <button class="mode-btn" id="mode-auto" onclick="setMode('auto')">Automatique</button>
+  </div>
+
+  <div id="section-manuel" class="block">
+    <div class="qty-row">
+      <label>Quantité</label>
+      <input type="range" min="1" max="10" value="3" step="1" id="qty" />
+      <span class="qty-val" id="qty-out">3</span>
+    </div>
+  </div>
+
+  <div id="section-auto" class="block" style="display:none;">
+    <div class="auto-row">
+      <label>Total d'avis</label>
+      <input type="number" id="auto-total" value="20" min="3" max="100" step="1" />
+      <span>avis (3 par batch)</span>
+    </div>
+  </div>
+
+  <div class="progress-label" id="progress-label"></div>
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="gen-btn" id="gen-btn" onclick="generate()">Générer</button>
+    <button class="stop-btn" id="stop-btn" onclick="stopAuto()">Arrêter</button>
+  </div>
+
+  <div class="results" id="results"></div>
+  <div id="copy-all-wrap"></div>
+</div>
+
+<script>
+  let rating = 5;
+  let length = 'court';
+  let mode = 'manuel';
+  let stopFlag = false;
+  let allReviews = [];
+  let cardIndex = 0;
+  let selectedPrestations = new Set(['coupe femme', 'coupe homme', 'balayage']);
+  let coiffeurs = []; // [{nom, role}]
+
+  // --- Prestations ---
+  document.querySelectorAll('#presta-tags .tag').forEach(t => {
+    t.addEventListener('click', () => {
+      const v = t.dataset.v;
+      if (selectedPrestations.has(v)) {
+        if (selectedPrestations.size === 1) return;
+        selectedPrestations.delete(v);
+        t.classList.remove('active');
+      } else {
+        selectedPrestations.add(v);
+        t.classList.add('active');
+      }
+    });
+  });
+
+  // --- Stars ---
+  const stars = document.querySelectorAll('.star');
+  stars.forEach(s => {
+    s.addEventListener('mouseover', () => stars.forEach(x => x.classList.toggle('on', +x.dataset.v <= +s.dataset.v)));
+    s.addEventListener('mouseout', () => stars.forEach(x => x.classList.toggle('on', +x.dataset.v <= rating)));
+    s.addEventListener('click', () => { rating = +s.dataset.v; stars.forEach(x => x.classList.toggle('on', +x.dataset.v <= rating)); });
+  });
+
+  // --- Longueur ---
+  document.querySelectorAll('#len-tabs .tag').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('#len-tabs .tag').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      length = t.dataset.v;
+    });
+  });
+
+  // --- Qty slider ---
+  const qtySlider = document.getElementById('qty');
+  qtySlider.addEventListener('input', () => { document.getElementById('qty-out').textContent = qtySlider.value; });
+
+  // --- Mode ---
+  function setMode(m) {
+    mode = m;
+    document.getElementById('mode-manuel').classList.toggle('active', m === 'manuel');
+    document.getElementById('mode-auto').classList.toggle('active', m === 'auto');
+    document.getElementById('section-manuel').style.display = m === 'manuel' ? '' : 'none';
+    document.getElementById('section-auto').style.display = m === 'auto' ? '' : 'none';
+  }
+
+  // --- Coiffeurs chips ---
+  function renderChips() {
+    const list = document.getElementById('chips-list');
+    list.innerHTML = '';
+    coiffeurs.forEach((c, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `${c.nom} <span class="chip-role">· ${c.role}</span>
+        <button class="chip-remove" onclick="removeCoiffeur(${i})" title="Supprimer">×</button>`;
+      list.appendChild(chip);
+    });
+  }
+
+  function addCoiffeur() {
+    const input = document.getElementById('coiffeur-input');
+    const nom = input.value.trim();
+    if (!nom) return;
+    const role = document.getElementById('coiffeur-role').value;
+    coiffeurs.push({ nom, role });
+    input.value = '';
+    renderChips();
+    input.focus();
+  }
+
+  function removeCoiffeur(i) {
+    coiffeurs.splice(i, 1);
+    renderChips();
+  }
+
+  document.getElementById('coiffeur-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addCoiffeur(); }
+  });
+
+  // --- Helpers ---
+  function starsStr(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+  function assignPrestations(qty, prestations) {
+    const result = [];
+    for (let i = 0; i < qty; i++) result.push(prestations[i % prestations.length]);
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
+  // --- Prompt builder ---
+  function buildPrompt(prestationsForBatch, qty, excludedTexts) {
+    const salon = document.getElementById('salon').value.trim() || 'ce salon';
+    const ville = document.getElementById('ville').value.trim();
+    const mentionEquipe = document.getElementById('mention-coiffeuse').checked;
+    const optFautes = document.getElementById('opt-fautes').checked;
+    const optEmojis = document.getElementById('opt-emojis').checked;
+    const optFidelite = document.getElementById('opt-fidelite').checked;
+    const masterPrompt = document.getElementById('master-prompt').value.trim();
+
+    const lenMap = {
+      court: 'Très courts (1-2 phrases, 15-40 mots). Style rapide, naturel.',
+      moyen: 'Longueur moyenne (3-4 phrases, 50-90 mots).',
+      long: 'Longs et détaillés (5-8 phrases, 100-180 mots).',
+      mixte: 'Variés : mélanger court (1-2 phrases), moyen (3-4 phrases) et long (5-7 phrases).'
+    };
+
+    let equipeInstr = '';
+    if (mentionEquipe && coiffeurs.length > 0) {
+      const liste = coiffeurs.map(c => `${c.nom} (${c.role})`).join(', ');
+      equipeInstr = `ÉQUIPE : ${liste}
+Dans environ 40% des avis, mentionner naturellement UN seul membre de l'équipe (répartir équitablement entre eux). Dans les autres avis, ne mentionner aucun prénom. Ne jamais mentionner plusieurs personnes dans le même avis.`;
+    } else {
+      equipeInstr = 'Ne pas mentionner de prénom de coiffeur.';
+    }
+
+    const prestaInstr = prestationsForBatch.map((p, i) => `Avis ${i + 1} : prestation "${p}"`).join('\n');
+    const exclusions = excludedTexts.length > 0
+      ? `\n\nÉVITE de répéter ces tournures déjà utilisées : ${excludedTexts.slice(-6).join(' | ')}`
+      : '';
+
+    const masterSection = masterPrompt
+      ? `\nCONTEXTE ADDITIONNEL (à intégrer naturellement dans les avis) :\n${masterPrompt}\n`
+      : '';
+
+    return `Tu es un expert en génération d'avis Google ultra-réalistes pour le salon de coiffure "${salon}"${ville ? ` à ${ville}` : ''}.
+${masterSection}
+Génère exactement ${qty} avis Google, note ${rating}/5, en respectant la prestation assignée :
+${prestaInstr}
+
+${equipeInstr}
+LONGUEUR : ${lenMap[length]}
+
+VARIÉTÉ OBLIGATOIRE :
+- Profil auteur différent (jeune femme, maman, professionnelle, étudiante, retraitée, homme si coupe homme)
+- Angle différent : résultat visuel, conseil reçu, ambiance, prix, rapidité, accueil, durée de tenue
+- Structure différente : commencer par le résultat, une interjection, le contexte, une comparaison
+${optFidelite ? `- 1 avis peut mentionner un retour régulier` : ''}
+
+STYLE :
+${optFautes ? `- Légères imperfections naturelles (oubli majuscule, virgule manquante, "rdv", "nickel"). Pas de fautes grossières.` : '- Correct et naturel.'}
+${optEmojis ? `- Emojis dans 30% des avis max.` : '- Aucun emoji.'}${exclusions}
+
+Réponds UNIQUEMENT en JSON valide, zéro markdown, zéro backtick :
+[{"auteur":"Prénom N.","note":${rating},"prestation":"...","longueur":"court|moyen|long","texte":"..."}]`;
+  }
+
+  // --- Cards ---
+  function addCards(reviews) {
+    const resultsEl = document.getElementById('results');
+    reviews.forEach(r => {
+      const idx = cardIndex++;
+      allReviews.push(r);
+      const card = document.createElement('div');
+      card.className = 'review-card';
+      card.innerHTML = `
+        <button class="save-btn" id="save-${idx}" onclick="saveReview(${idx})">+ Dashboard</button>
+        <button class="copy-btn" onclick="copyReview(this,${idx})">Copier</button>
+        <div class="review-meta">
+          <span class="review-name">${r.auteur}</span>
+          <span class="review-stars">${starsStr(r.note)}</span>
+        </div>
+        <p class="review-text" id="rt-${idx}">${r.texte}</p>
+        <div class="badges">
+          <span class="badge">${r.prestation}</span>
+          <span class="badge">${r.longueur}</span>
+        </div>`;
+      resultsEl.appendChild(card);
+    });
+    updateCopyAll();
+  }
+
+  function updateCopyAll() {
+    const wrap = document.getElementById('copy-all-wrap');
+    if (allReviews.length < 2) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = '';
+    const btn = document.createElement('button');
+    btn.className = 'copy-all-btn';
+    btn.textContent = `Copier tous les avis (${allReviews.length})`;
+    btn.onclick = () => {
+      const all = allReviews.map(r => `${r.auteur} — ${starsStr(r.note)}\n${r.texte}`).join('\n\n---\n\n');
+      navigator.clipboard.writeText(all);
+      btn.textContent = 'Copié !';
+      setTimeout(() => btn.textContent = `Copier tous les avis (${allReviews.length})`, 2000);
+    };
+    wrap.appendChild(btn);
+  }
+
+  // --- API (via OpenRouter) ---
+  async function callAPI(prompt) {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  }
+
+  // --- Stop ---
+  function stopAuto() {
+    stopFlag = true;
+    document.getElementById('stop-btn').style.display = 'none';
+  }
+
+  // --- Generate ---
+  async function generate() {
+    const prestations = [...selectedPrestations];
+    if (!prestations.length) return;
+
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = true;
+
+    if (mode === 'manuel') {
+      const qty = +qtySlider.value;
+      btn.innerHTML = '<span class="spinner"></span>Génération…';
+      allReviews = []; cardIndex = 0;
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('copy-all-wrap').innerHTML = '';
+      try {
+        const assigned = assignPrestations(qty, prestations);
+        const reviews = await callAPI(buildPrompt(assigned, qty, []));
+        addCards(reviews);
+      } catch (e) {
+        document.getElementById('results').innerHTML = `<p style="color:var(--danger);font-size:13px;">Erreur : ${e.message}</p>`;
+      }
+      btn.disabled = false;
+      btn.textContent = 'Générer';
+
+    } else {
+      const total = Math.max(3, +document.getElementById('auto-total').value || 20);
+      const batchSize = 3;
+      const batches = Math.ceil(total / batchSize);
+      stopFlag = false;
+      allReviews = []; cardIndex = 0;
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('copy-all-wrap').innerHTML = '';
+      document.getElementById('stop-btn').style.display = '';
+
+      const progressWrap = document.getElementById('progress-wrap');
+      const progressBar = document.getElementById('progress-bar');
+      const progressLabel = document.getElementById('progress-label');
+      progressWrap.style.display = '';
+      progressLabel.style.display = '';
+      progressBar.style.width = '0%';
+
+      const allAssigned = assignPrestations(total, prestations);
+      let generated = 0;
+      const usedTexts = [];
+
+      for (let b = 0; b < batches; b++) {
+        if (stopFlag) break;
+        const start = b * batchSize;
+        const end = Math.min(start + batchSize, total);
+        const batchPrestations = allAssigned.slice(start, end);
+
+        btn.innerHTML = `<span class="spinner"></span>${generated}/${total} avis…`;
+        progressLabel.textContent = `Batch ${b + 1}/${batches} — ${generated} avis générés`;
+        progressBar.style.width = Math.round((generated / total) * 100) + '%';
+
+        try {
+          const reviews = await callAPI(buildPrompt(batchPrestations, batchPrestations.length, usedTexts));
+          reviews.forEach(r => usedTexts.push(r.texte.slice(0, 40)));
+          addCards(reviews);
+          generated += reviews.length;
+        } catch (e) {
+          document.getElementById('results').insertAdjacentHTML('beforeend',
+            `<p style="color:var(--danger);font-size:13px;">Erreur batch ${b + 1} : ${e.message}</p>`);
+          break;
+        }
+
+        if (!stopFlag && b < batches - 1) await new Promise(r => setTimeout(r, 600));
+      }
+
+      progressBar.style.width = '100%';
+      progressLabel.textContent = `${generated} avis générés`;
+      setTimeout(() => { progressWrap.style.display = 'none'; progressLabel.style.display = 'none'; }, 2000);
+      document.getElementById('stop-btn').style.display = 'none';
+      btn.disabled = false;
+      btn.textContent = 'Générer';
+    }
+  }
+
+  window.copyReview = function (btn, i) {
+    navigator.clipboard.writeText(document.getElementById('rt-' + i).textContent);
+    btn.textContent = 'Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
+  };
+
+  window.saveReview = async function (i) {
+    const r = allReviews[i];
+    if (!r) return;
+    const btn = document.getElementById('save-' + i);
+    btn.textContent = '…';
+    btn.disabled = true;
+    try {
+      await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...r, source: 'generated', status: 'pending' })
+      });
+      btn.textContent = '✓ Dans Dashboard';
+      btn.classList.add('saved');
+    } catch (e) {
+      btn.textContent = 'Erreur';
+      btn.disabled = false;
+    }
+  };
+</script>
+</body>
+</html>

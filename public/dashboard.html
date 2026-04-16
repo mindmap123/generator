@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Review Tracking</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f7f4;
+      --surface: #ffffff;
+      --surface2: #f2f0ec;
+      --border: #dedad4;
+      --text: #1a1a1a;
+      --muted: #888;
+      --accent: #b8922a;
+      --accent-bg: #fdf6e8;
+      --accent-border: #e8d09a;
+      --danger: #c94040;
+      --danger-bg: #fdf0f0;
+      --danger-border: #f0c0c0;
+      --success: #2e7d5e;
+      --success-bg: #edf7f3;
+      --success-border: #a8d9c5;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    .nav {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 48px;
+    }
+
+    .nav-brand { font-size: 14px; font-weight: 600; color: var(--text); margin-right: 24px; }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      height: 100%;
+      padding: 0 14px;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s;
+    }
+
+    .nav-link:hover { color: var(--text); }
+    .nav-link.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+    .page { max-width: 1020px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* Stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-label { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px; }
+    .stat-value { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-card.posted .stat-value { color: var(--success); }
+    .stat-card.pending .stat-value { color: var(--accent); }
+    .stat-card.disappeared .stat-value { color: var(--danger); }
+    .stat-card.tracked .stat-value { color: #5b7fa6; }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tabs {
+      display: flex;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .filter-tab {
+      padding: 7px 16px;
+      background: transparent;
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+
+    .filter-tab.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+
+    .spacer { flex: 1; }
+
+    .btn-toolbar {
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: inherit;
+      box-shadow: var(--shadow);
+      transition: all 0.15s;
+    }
+
+    .btn-toolbar:hover { background: var(--surface2); color: var(--text); }
+    .btn-undo:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+
+    /* Table */
+    .table-wrap {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+    thead th {
+      background: var(--surface2);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    tbody tr { border-bottom: 0.5px solid var(--border); transition: filter 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { filter: brightness(0.97); }
+
+    /* Row colors */
+    tbody tr.row-posted    { background: #f0faf5; }
+    tbody tr.row-disappeared { background: #fdf0f0; }
+    tbody tr.row-pending   { background: #ffffff; }
+
+    td { padding: 11px 14px; vertical-align: middle; }
+
+    .td-text { max-width: 260px; }
+
+    .text-preview {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      color: #444;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .text-preview.expanded { display: block; -webkit-line-clamp: unset; overflow: visible; }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+      margin-top: 2px;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .badge-pending    { background: #fdf6e8; border: 0.5px solid var(--accent-border); color: #7a6a2a; }
+    .badge-posted     { background: var(--success-bg); border: 0.5px solid var(--success-border); color: var(--success); }
+    .badge-disappeared { background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger); }
+    .badge-old        { background: var(--surface2); border: 0.5px solid var(--border); color: var(--muted); font-size: 10px; }
+    .badge-new        { background: #eef4fd; border: 0.5px solid #b8d0f0; color: #3a6a9e; font-size: 10px; }
+
+    .stars-sm { color: var(--accent); font-size: 12px; letter-spacing: -1px; }
+
+    /* Action buttons */
+    .actions-cell { display: flex; flex-direction: column; gap: 5px; min-width: 110px; }
+
+    .action-btn {
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+      border: 0.5px solid;
+      transition: all 0.15s;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .btn-mark-posted  { background: var(--success-bg); border-color: var(--success-border); color: var(--success); }
+    .btn-mark-posted:hover { background: var(--success); color: #fff; border-color: var(--success); }
+
+    .btn-gone         { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-gone:hover   { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+
+    .btn-still-there  { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-still-there:hover { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+
+    .btn-reactivate   { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+    .btn-reactivate:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .copy-btn-sm {
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      color: var(--muted);
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .copy-btn-sm:hover { color: var(--accent); border-color: var(--accent-border); }
+    .copy-btn-sm.copied { color: var(--success); border-color: var(--success-border); }
+
+    .compte-cell { font-size: 12px; color: var(--text); }
+    .date-cell   { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .date-cell .date-label { display: block; font-size: 10px; color: var(--muted); opacity: 0.7; margin-top: 2px; }
+
+    .empty-state { padding: 60px 24px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      padding: 28px 28px 24px;
+      width: 100%;
+      max-width: 440px;
+      animation: slideUp 0.2s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(16px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .modal .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .modal label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+
+    .modal input[type=text] {
+      width: 100%;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: inherit;
+      margin-bottom: 8px;
+    }
+
+    .modal input[type=text]:focus { outline: none; border-color: var(--accent); }
+    .modal .modal-hint { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    .btn-cancel  { padding: 9px 18px; border-radius: var(--radius-sm); background: var(--surface); border: 0.5px solid var(--border); font-size: 13px; cursor: pointer; color: var(--muted); font-family: inherit; }
+    .btn-confirm { padding: 9px 18px; border-radius: var(--radius-sm); background: var(--success); border: none; font-size: 13px; font-weight: 600; cursor: pointer; color: #fff; font-family: inherit; transition: opacity 0.15s; }
+    .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-confirm:hover:not(:disabled) { opacity: 0.88; }
+
+    /* Import */
+    .import-section {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .import-header {
+      padding: 14px 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .import-header:hover { background: var(--surface2); }
+    .import-header .arrow { transition: transform 0.2s; font-size: 11px; }
+    .import-section.open .arrow { transform: rotate(90deg); }
+
+    .import-body { display: none; padding: 0 18px 18px; border-top: 0.5px solid var(--border); }
+    .import-section.open .import-body { display: block; }
+
+    .import-hint { font-size: 12px; color: var(--muted); margin: 14px 0 10px; line-height: 1.6; }
+    .import-hint code { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 3px; padding: 1px 5px; font-family: monospace; font-size: 11px; color: var(--text); }
+
+    textarea.import-ta {
+      width: 100%;
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--text);
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.6;
+    }
+
+    textarea.import-ta:focus { outline: none; border-color: var(--accent); }
+
+    .import-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+
+    .btn-do-import { padding: 8px 18px; border-radius: var(--radius-sm); background: var(--accent); border: none; font-size: 13px; font-weight: 600; cursor: pointer; color: #fff; font-family: inherit; transition: opacity 0.15s; }
+    .btn-do-import:hover { opacity: 0.88; }
+
+    .import-feedback { font-size: 13px; color: var(--success); }
+    .import-feedback.err { color: var(--danger); }
+
+    /* Workflow hint */
+    .workflow-hint {
+      background: var(--accent-bg);
+      border: 0.5px solid var(--accent-border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--accent);
+      line-height: 1.6;
+    }
+
+    .workflow-hint strong { font-weight: 600; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    tbody tr { animation: fadeIn 0.2s ease; }
+  </style>
+</head>
+<body>
+<script src="/auth-client.js"></script>
+
+<nav class="nav">
+  <span class="nav-brand">Salon</span>
+  <a class="nav-link" href="/">Générateur</a>
+  <a class="nav-link active" href="/dashboard">Dashboard</a>
+</nav>
+
+<div class="page">
+
+  <div class="workflow-hint">
+    <strong>📋 Workflow:</strong> Generate reviews → Click "+ Dashboard" → Post on Google → Click "Mark posted" → Enter avatar name → Auto-timestamp ✓
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat-card posted">
+      <div class="stat-label">Posted</div>
+      <div class="stat-value" id="stat-posted">—</div>
+    </div>
+    <div class="stat-card pending">
+      <div class="stat-label">Pending</div>
+      <div class="stat-value" id="stat-pending">—</div>
+    </div>
+    <div class="stat-card disappeared">
+      <div class="stat-label">Gone</div>
+      <div class="stat-value" id="stat-disappeared">—</div>
+    </div>
+    <div class="stat-card tracked">
+      <div class="stat-label">Tracked</div>
+      <div class="stat-value" id="stat-tracked">—</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="all">All</button>
+      <button class="filter-tab" data-filter="pending">Pending</button>
+      <button class="filter-tab" data-filter="posted">Posted</button>
+      <button class="filter-tab" data-filter="disappeared">Gone</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn-toolbar btn-undo" id="btn-undo" onclick="undoLastImport()">↩ Undo import</button>
+    <button class="btn-toolbar" onclick="toggleImport()">Import old reviews</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Review</th>
+          <th>Source</th>
+          <th>Rating</th>
+          <th>Status</th>
+          <th>Google Account</th>
+          <th>Timeline</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="reviews-body">
+        <tr><td colspan="7" class="empty-state">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="import-section" id="import-section">
+    <div class="import-header" onclick="toggleImport()">
+      <span class="arrow">▶</span>
+      <span>Import old reviews</span>
+    </div>
+    <div class="import-body">
+      <div class="import-hint">
+        Paste directly from Google Sheets (tabs) or use pipe format.<br>
+        First line is skipped if it's a header (Reviews / Name / Date).<br>
+        <code>Review text [tab] Account name [tab] Date</code> — Google Sheets<br>
+        <code>Review text | Account name | Date</code> — manual<br>
+        Rows without an account name are skipped.
+      </div>
+      <textarea class="import-ta" id="import-ta" placeholder="Paste from Google Sheets or type manually…"></textarea>
+      <div class="import-actions">
+        <button class="btn-do-import" onclick="doImport()">Import</button>
+        <span class="import-feedback" id="import-feedback"></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <h3>Mark as posted</h3>
+    <p class="modal-sub">This review has been posted on Google. Enter the Google account name that was used to post it.</p>
+    <label>Google Account Name</label>
+    <input type="text" id="modal-compte" placeholder="e.g. Isabelle Martin" autocomplete="off" />
+    <p class="modal-hint">The exact name as it appears on Google (first name + last name or username)</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" id="modal-confirm" onclick="confirmPosted()">Confirm & timestamp</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let reviews = [];
+  let currentFilter = 'all';
+  let pendingPostId = null;
+
+  function starsStr(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+      + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatTimeline(r) {
+    let html = '';
+    
+    // Created/Added
+    if (r.added_at) {
+      html += `<div><span class="date-label">Created:</span> ${formatDate(r.added_at)}</div>`;
+    }
+    
+    // Posted
+    if (r.posted_at) {
+      html += `<div><span class="date-label">Posted:</span> ${formatDate(r.posted_at)}</div>`;
+    }
+    
+    // Disappeared
+    if (r.disappeared_at) {
+      html += `<div><span class="date-label">Gone:</span> ${formatDate(r.disappeared_at)}</div>`;
+    }
+    
+    // Last checked
+    if (r.last_checked_at) {
+      html += `<div><span class="date-label">Checked:</span> ${formatDate(r.last_checked_at)}</div>`;
+    }
+    
+    return html || '—';
+  }
+
+  async function loadReviews() {
+    try {
+      const res = await fetch('/api/reviews');
+      reviews = await res.json();
+      render();
+    } catch (e) {
+      document.getElementById('reviews-body').innerHTML =
+        `<tr><td colspan="7" class="empty-state" style="color:#c94040">Load error: ${e.message}</td></tr>`;
+    }
+  }
+
+  function updateStats() {
+    const total       = reviews.length;
+    const posted      = reviews.filter(r => r.status === 'posted').length;
+    const pending     = reviews.filter(r => r.status === 'pending').length;
+    const disappeared = reviews.filter(r => r.status === 'disappeared').length;
+    // "Tracked" = new reviews (generated, not historical) that have been posted with a timestamp
+    const tracked     = reviews.filter(r => r.source === 'generated' && r.status === 'posted' && r.posted_at).length;
+    document.getElementById('stat-total').textContent       = total;
+    document.getElementById('stat-posted').textContent      = posted;
+    document.getElementById('stat-pending').textContent     = pending;
+    document.getElementById('stat-disappeared').textContent = disappeared;
+    document.getElementById('stat-tracked').textContent     = tracked;
+  }
+
+  function filteredReviews() {
+    if (currentFilter === 'all') return reviews;
+    return reviews.filter(r => r.status === currentFilter);
+  }
+
+  function render() {
+    updateStats();
+    const list = filteredReviews();
+    const tbody = document.getElementById('reviews-body');
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No reviews in this category</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(r => {
+      const rowClass = { posted: 'row-posted', disappeared: 'row-disappeared', pending: 'row-pending' }[r.status] || '';
+
+      const statusBadge = {
+        pending:     '<span class="badge badge-pending">Pending</span>',
+        posted:      '<span class="badge badge-posted">Posted ✓</span>',
+        disappeared: '<span class="badge badge-disappeared">Gone</span>'
+      }[r.status] || '';
+
+      // Source badge: old (historical) vs new (generated with timestamp)
+      const isNew = r.source === 'generated';
+      const sourceBadge = isNew
+        ? '<span class="badge badge-new">New</span>'
+        : '<span class="badge badge-old">Old</span>';
+
+      return `<tr class="${rowClass}" data-id="${r.id}">
+        <td class="td-text">
+          <div class="text-preview" id="preview-${r.id}">${escHtml(r.texte)}</div>
+          <button class="expand-btn" onclick="toggleExpand('${r.id}')">See more</button>
+        </td>
+        <td>${sourceBadge}</td>
+        <td><span class="stars-sm">${starsStr(r.note || 5)}</span></td>
+        <td>${statusBadge}</td>
+        <td class="compte-cell">${escHtml(r.compte_google || '—')}</td>
+        <td class="date-cell">${formatTimeline(r)}</td>
+        <td class="actions-cell">${buildActions(r)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function buildActions(r) {
+    let html = `<button class="copy-btn-sm" onclick="copyReview('${r.id}', this)">Copy</button>`;
+    if (r.status === 'pending') {
+      html += `<button class="action-btn btn-mark-posted" onclick="openModal('${r.id}')">Mark posted</button>`;
+    }
+    if (r.status === 'posted') {
+      html += `<button class="action-btn btn-still-there" onclick="markStillThere('${r.id}')">Still there ✓</button>`;
+      html += `<button class="action-btn btn-gone" onclick="markGone('${r.id}')">Gone?</button>`;
+    }
+    if (r.status === 'disappeared') {
+      html += `<button class="action-btn btn-reactivate" onclick="markPending('${r.id}')">Reactivate</button>`;
+    }
+    return html;
+  }
+
+  function escHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toggleExpand(id) {
+    const el  = document.getElementById('preview-' + id);
+    const btn = el.nextElementSibling;
+    const expanded = el.classList.toggle('expanded');
+    btn.textContent = expanded ? 'See less' : 'See more';
+  }
+
+  async function copyReview(id, btn) {
+    const r = reviews.find(x => x.id === id);
+    if (!r) return;
+    await navigator.clipboard.writeText(r.texte);
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }
+
+  // Modal
+  function openModal(id) {
+    pendingPostId = id;
+    document.getElementById('modal-compte').value = '';
+    document.getElementById('modal-backdrop').classList.add('open');
+    setTimeout(() => document.getElementById('modal-compte').focus(), 100);
+  }
+
+  function closeModal() {
+    document.getElementById('modal-backdrop').classList.remove('open');
+    pendingPostId = null;
+  }
+
+  document.getElementById('modal-compte').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmPosted();
+  });
+
+  document.getElementById('modal-backdrop').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-backdrop')) closeModal();
+  });
+
+  async function confirmPosted() {
+    const compte = document.getElementById('modal-compte').value.trim();
+    if (!compte) { document.getElementById('modal-compte').focus(); return; }
+    await updateReview(pendingPostId, {
+      status: 'posted',
+      compte_google: compte,
+      posted_at: new Date().toISOString()
+    });
+    closeModal();
+  }
+
+  // Status updates
+  async function updateReview(id, patch) {
+    const res = await fetch(`/api/reviews/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch)
+    });
+    const updated = await res.json();
+    const idx = reviews.findIndex(r => r.id === id);
+    if (idx !== -1) reviews[idx] = updated;
+    render();
+  }
+
+  async function markGone(id) {
+    await updateReview(id, { 
+      status: 'disappeared',
+      disappeared_at: new Date().toISOString()
+    });
+  }
+
+  async function markStillThere(id) {
+    await updateReview(id, { 
+      last_checked_at: new Date().toISOString()
+    });
+  }
+
+  async function markPending(id) {
+    await updateReview(id, { 
+      status: 'pending', 
+      compte_google: null, 
+      posted_at: null,
+      disappeared_at: null,
+      last_checked_at: null
+    });
+  }
+
+  // Filters
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilter = tab.dataset.filter;
+      render();
+    });
+  });
+
+  // Undo last import
+  let undoPending = false;
+
+  async function undoLastImport() {
+    const btn = document.getElementById('btn-undo');
+    if (btn.disabled) return;
+
+    if (!undoPending) {
+      undoPending = true;
+      btn.textContent = 'Confirm?';
+      btn.style.background = 'var(--danger-bg)';
+      btn.style.color = 'var(--danger)';
+      btn.style.borderColor = 'var(--danger-border)';
+      setTimeout(() => {
+        if (undoPending) {
+          undoPending = false;
+          btn.textContent = '↩ Undo import';
+          btn.style = '';
+        }
+      }, 3000);
+      return;
+    }
+
+    undoPending = false;
+    btn.disabled = true;
+    btn.textContent = '…';
+
+    try {
+      const res = await fetch('/api/reviews/last-import', { method: 'DELETE' });
+      const data = await res.json();
+      if (data.removed === 0) {
+        btn.textContent = 'Nothing to undo';
+        setTimeout(() => { btn.textContent = '↩ Undo import'; btn.disabled = false; btn.style = ''; }, 2000);
+        return;
+      }
+      btn.textContent = `${data.removed} removed`;
+      btn.style.color = 'var(--success)';
+      setTimeout(() => { btn.textContent = '↩ Undo import'; btn.disabled = false; btn.style = ''; }, 2000);
+      await loadReviews();
+    } catch (e) {
+      btn.textContent = 'Error';
+      btn.disabled = false;
+      setTimeout(() => { btn.textContent = '↩ Undo import'; btn.style = ''; }, 2000);
+    }
+  }
+
+  // Import
+  function toggleImport() {
+    document.getElementById('import-section').classList.toggle('open');
+  }
+
+  function parseTSV(text) {
+    const rows = [];
+    let cols = [], field = '', inQuote = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '"') {
+        if (inQuote && text[i + 1] === '"') { field += '"'; i++; }
+        else inQuote = !inQuote;
+      } else if (!inQuote && ch === '\t') {
+        cols.push(field); field = '';
+      } else if (!inQuote && (ch === '\n' || ch === '\r')) {
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        cols.push(field); field = '';
+        if (cols.some(c => c.trim())) rows.push(cols.map(c => c.trim()));
+        cols = [];
+      } else {
+        field += ch;
+      }
+    }
+    cols.push(field);
+    if (cols.some(c => c.trim())) rows.push(cols.map(c => c.trim()));
+    return rows;
+  }
+
+  async function doImport() {
+    const raw = document.getElementById('import-ta').value.trim();
+    const fb  = document.getElementById('import-feedback');
+    if (!raw) return;
+
+    const rows = parseTSV(raw);
+    const isHeader = /^(reviews?|avis)$/i.test((rows[0] || [])[0] || '');
+    const dataRows = isHeader ? rows.slice(1) : rows;
+
+    const items = dataRows.map(parts => {
+      const texte   = parts[0] || '';
+      const compte  = parts[1] || null;
+      const dateStr = parts[2] || null;
+      if (!texte || !compte) return null; // skip rows without name
+      let posted_at = null;
+      if (dateStr) {
+        const d = new Date(dateStr);
+        if (!isNaN(d)) posted_at = d.toISOString();
+      }
+      return { texte, prestation: '', note: 5, longueur: '', source: 'historical', status: 'posted', compte_google: compte, posted_at };
+    }).filter(Boolean);
+
+    if (!items.length) {
+      fb.textContent = 'No valid rows found (rows without account name are skipped).';
+      fb.className = 'import-feedback err';
+      return;
+    }
+
+    try {
+      const res   = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(items) });
+      const added = await res.json();
+      reviews.push(...added);
+      render();
+      document.getElementById('import-ta').value = '';
+      fb.textContent = `${added.length} reviews imported.`;
+      fb.className = 'import-feedback';
+      setTimeout(() => { fb.textContent = ''; }, 3000);
+    } catch (e) {
+      fb.textContent = 'Error: ' + e.message;
+      fb.className = 'import-feedback err';
+    }
+  }
+
+  loadReviews();
+</script>
+</body>
+</html>

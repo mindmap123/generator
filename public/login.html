@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f7f4;
+      --surface: #ffffff;
+      --border: #dedad4;
+      --text: #1a1a1a;
+      --muted: #888;
+      --accent: #b8922a;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07);
+      --error: #d32f2f;
+      --error-bg: #ffebee;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input[type=text],
+    input[type=password] {
+      width: 100%;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+
+    input[type=text]:focus,
+    input[type=password]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+
+    .btn-login:hover {
+      opacity: 0.88;
+    }
+
+    .btn-login:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      background: var(--error-bg);
+      color: var(--error);
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .quick-login {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 0.5px solid var(--border);
+    }
+
+    .quick-login-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .quick-login-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-quick {
+      flex: 1;
+      padding: 10px;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn-quick:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="logo">🔐</div>
+  <h1>Connexion</h1>
+  <p class="subtitle">Accédez à votre interface</p>
+
+  <div class="error-message" id="error-message"></div>
+
+  <form id="login-form">
+    <div class="form-group">
+      <label for="username">Nom d'utilisateur</label>
+      <input type="text" id="username" name="username" autocomplete="username" required />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required />
+    </div>
+
+    <button type="submit" class="btn-login" id="btn-login">Se connecter</button>
+  </form>
+
+  <div class="quick-login">
+    <div class="quick-login-title">Accès rapide (dev)</div>
+    <div class="quick-login-buttons">
+      <button class="btn-quick" onclick="quickLogin('wawa', 'wawa07')">👑 Admin</button>
+      <button class="btn-quick" onclick="quickLogin('poster', 'poster123')">🎯 Poster</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('login-form');
+  const errorMsg = document.getElementById('error-message');
+  const btnLogin = document.getElementById('btn-login');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    await performLogin(username, password);
+  });
+
+  async function performLogin(username, password) {
+    errorMsg.classList.remove('show');
+    btnLogin.disabled = true;
+    btnLogin.textContent = 'Connexion...';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Erreur de connexion');
+      }
+
+      // Stocker le token
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('user_role', data.role);
+      localStorage.setItem('username', data.username);
+
+      // Rediriger selon le rôle
+      if (data.role === 'admin') {
+        window.location.href = '/admin';
+      } else if (data.role === 'poster') {
+        window.location.href = '/poster';
+      } else {
+        window.location.href = '/';
+      }
+    } catch (e) {
+      errorMsg.textContent = e.message;
+      errorMsg.classList.add('show');
+      btnLogin.disabled = false;
+      btnLogin.textContent = 'Se connecter';
+    }
+  }
+
+  function quickLogin(username, password) {
+    document.getElementById('username').value = username;
+    document.getElementById('password').value = password;
+    performLogin(username, password);
+  }
+
+  // Auto-focus sur le champ username
+  document.getElementById('username').focus();
+</script>
+</body>
+</html>
