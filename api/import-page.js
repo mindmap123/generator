@@ -1,0 +1,122 @@
+module.exports = async function handler(req, res) {
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Import Data</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f8f7f4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h1 { font-size: 24px; margin-bottom: 20px; }
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 12px 24px;
+      background: #b8922a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+    .result.success { background: #edf7f3; color: #2e7d5e; display: block; }
+    .result.error { background: #ffebee; color: #d32f2f; display: block; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📦 Import Local Data</h1>
+  <p style="margin-bottom: 20px; color: #666;">
+    Collez le contenu de votre fichier <code>data.json</code> ci-dessous et cliquez sur "Importer".
+  </p>
+  
+  <textarea id="dataInput" placeholder='{"reviews": [...], "last_import_batch": "..."}'></textarea>
+  
+  <button onclick="importData()">Importer les données</button>
+  
+  <div id="result" class="result"></div>
+</div>
+
+<script>
+  async function importData() {
+    const input = document.getElementById('dataInput').value;
+    const result = document.getElementById('result');
+    
+    if (!input.trim()) {
+      result.className = 'result error';
+      result.textContent = 'Veuillez coller les données JSON';
+      return;
+    }
+    
+    try {
+      const data = JSON.parse(input);
+      
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        result.className = 'result error';
+        result.textContent = '❌ Non connecté. Allez sur /login d\\'abord';
+        return;
+      }
+      
+      const res = await fetch('/api/import-local-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+      });
+      
+      const response = await res.json();
+      
+      if (res.ok) {
+        result.className = 'result success';
+        result.textContent = '✅ ' + response.message;
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 2000);
+      } else {
+        throw new Error(response.error || 'Erreur lors de l\\'import');
+      }
+    } catch (e) {
+      result.className = 'result error';
+      result.textContent = '❌ ' + e.message;
+    }
+  }
+</script>
+</body>
+</html>`;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.status(200).send(html);
+};
