@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
   try {
     // GET all reviews - Admin & Poster
     if (method === 'GET') {
-      const authResult = requireRole(req, ['admin', 'poster']);
+      const authResult = await requireRole(req, ['admin', 'poster']);
       if (!authResult.authorized) {
         return res.status(403).json({ error: authResult.error });
       }
@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
 
     // POST add review(s) - Admin only
     if (method === 'POST') {
-      const authResult = requireRole(req, ['admin']);
+      const authResult = await requireRole(req, ['admin']);
       if (!authResult.authorized) {
         return res.status(403).json({ error: authResult.error });
       }

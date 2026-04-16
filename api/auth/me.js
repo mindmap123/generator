@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const authResult = requireAuth(req);
+  const authResult = await requireAuth(req);
   
   if (!authResult.authorized) {
     return res.status(401).json({ error: authResult.error });

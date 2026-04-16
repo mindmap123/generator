@@ -95,7 +95,7 @@ const server = http.createServer(async (req, res) => {
     // Auth endpoints (public)
     if (method === 'POST' && url === '/api/auth/login') {
       const { username, password } = await parseBody(req);
-      const result = login(username, password);
+      const result = await login(username, password);
       if (!result) {
         return sendJSON(res, 401, { error: 'Identifiants invalides' });
       }
@@ -107,10 +107,10 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === 'POST' && url === '/api/auth/logout') {
-      const authResult = requireAuth(req);
+      const authResult = await requireAuth(req);
       if (authResult.authorized) {
         const token = req.headers.authorization?.replace('Bearer ', '');
-        logout(token);
+        await logout(token);
       }
       res.writeHead(200, {
         'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === 'GET' && url === '/api/auth/me') {
-      const authResult = requireAuth(req);
+      const authResult = await requireAuth(req);
       if (!authResult.authorized) {
         return sendJSON(res, 401, { error: authResult.error });
       }
@@ -136,7 +136,7 @@ const server = http.createServer(async (req, res) => {
 
     // Protected pages - Admin only
     if (method === 'GET' && url === '/admin') {
-      const authResult = requireRole(req, ['admin']);
+      const authResult = await requireRole(req, ['admin']);
       if (!authResult.authorized) {
         res.writeHead(302, { Location: '/login' });
         return res.end();
@@ -145,7 +145,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === 'GET' && url === '/dashboard') {
-      const authResult = requireRole(req, ['admin']);
+      const authResult = await requireRole(req, ['admin']);
       if (!authResult.authorized) {
         res.writeHead(302, { Location: '/login' });
         return res.end();
@@ -155,7 +155,7 @@ const server = http.createServer(async (req, res) => {
 
     // Protected pages - Admin & Poster
     if (method === 'GET' && url === '/poster') {
-      const authResult = requireRole(req, ['admin', 'poster']);
+      const authResult = await requireRole(req, ['admin', 'poster']);
       if (!authResult.authorized) {
         res.writeHead(302, { Location: '/login' });
         return res.end();
@@ -165,7 +165,7 @@ const server = http.createServer(async (req, res) => {
 
     // Generate reviews via Claude - Admin only
     if (method === 'POST' && url === '/generate') {
-      const authResult = requireRole(req, ['admin']);
+      const authResult = await requireRole(req, ['admin']);
       if (!authResult.authorized) {
         return sendJSON(res, 403, { error: authResult.error });
       }
@@ -176,7 +176,7 @@ const server = http.createServer(async (req, res) => {
 
     // GET all reviews - Admin & Poster
     if (method === 'GET' && url === '/api/reviews') {
-      const authResult = requireRole(req, ['admin', 'poster']);
+      const authResult = await requireRole(req, ['admin', 'poster']);
       if (!authResult.authorized) {
         return sendJSON(res, 403, { error: authResult.error });
       }
@@ -186,7 +186,7 @@ const server = http.createServer(async (req, res) => {
 
     // POST add review(s) - Admin only
     if (method === 'POST' && url === '/api/reviews') {
-      const authResult = requireRole(req, ['admin']);
+      const authResult = await requireRole(req, ['admin']);
       if (!authResult.authorized) {
         return sendJSON(res, 403, { error: authResult.error });
       }
@@ -222,7 +222,7 @@ const server = http.createServer(async (req, res) => {
     if (method === 'PUT') {
       const m = url.match(/^\/api\/reviews\/([^/]+)$/);
       if (m) {
-        const authResult = requireRole(req, ['admin', 'poster']);
+        const authResult = await requireRole(req, ['admin', 'poster']);
         if (!authResult.authorized) {
           return sendJSON(res, 403, { error: authResult.error });
         }
@@ -239,7 +239,7 @@ const server = http.createServer(async (req, res) => {
 
     // DELETE last import batch - Admin only
     if (method === 'DELETE' && url === '/api/reviews/last-import') {
-      const authResult = requireRole(req, ['admin']);
+      const authResult = await requireRole(req, ['admin']);
       if (!authResult.authorized) {
         return sendJSON(res, 403, { error: authResult.error });
       }
@@ -257,7 +257,7 @@ const server = http.createServer(async (req, res) => {
     if (method === 'DELETE') {
       const m = url.match(/^\/api\/reviews\/([^/]+)$/);
       if (m) {
-        const authResult = requireRole(req, ['admin']);
+        const authResult = await requireRole(req, ['admin']);
         if (!authResult.authorized) {
           return sendJSON(res, 403, { error: authResult.error });
         }

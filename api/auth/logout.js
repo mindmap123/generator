@@ -5,10 +5,10 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const authResult = requireAuth(req);
+  const authResult = await requireAuth(req);
   if (authResult.authorized) {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    logout(token);
+    await logout(token);
   }
 
   res.setHeader('Set-Cookie', 'auth_token=; HttpOnly; Path=/; Max-Age=0');

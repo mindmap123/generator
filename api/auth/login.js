@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
   }
 
   const { username, password } = req.body;
-  const result = login(username, password);
+  const result = await login(username, password);
 
   if (!result) {
     return res.status(401).json({ error: 'Identifiants invalides' });

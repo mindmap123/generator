@@ -1,42 +1,75 @@
 const { requireRole } = require('../auth');
 const storage = require('../lib/storage');
+const { randomUUID } = require('crypto');
 
-// Toutes vos reviews
-const INITIAL_REVIEWS = require('../data.json').reviews;
+// Reviews initiales depuis data.json
+let INITIAL_REVIEWS = [];
+try {
+  INITIAL_REVIEWS = require('../data.json').reviews || [];
+} catch (e) {
+  console.warn('data.json not found, skipping initial data');
+}
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Admin only
-  const authResult = requireRole(req, ['admin']);
+  const authResult = await requireRole(req, ['admin']);
   if (!authResult.authorized) {
     return res.status(403).json({ error: authResult.error });
   }
 
   try {
-    // Charger les reviews existantes
-    const existing = await storage.get('reviews') || [];
-    
-    console.log(`Existing reviews: ${existing.length}`);
-    console.log(`Initial reviews: ${INITIAL_REVIEWS.length}`);
-    
-    // Si déjà des reviews, ne rien faire
+    // Vérifier si déjà des données en base
+    const existing = await storage.getAllReviews();
+
     if (existing.length > 0) {
-      return res.status(200).json({ 
-        message: `${existing.length} reviews déjà présentes`,
+      return res.status(200).json({
+        message: `${existing.length} avis déjà présents, rien à faire`,
         count: existing.length
       });
     }
-    
-    // Sinon, charger les données initiales
-    await storage.set('reviews', INITIAL_REVIEWS);
-    await storage.set('last_import_batch', '3c2f5314-26fe-45e6-8e99-5f07fe1cc72b');
-    
-    return res.status(200).json({ 
-      message: `${INITIAL_REVIEWS.length} reviews initialisées avec succès`,
-      count: INITIAL_REVIEWS.length
+
+    if (INITIAL_REVIEWS.length === 0) {
+      return res.status(200).json({
+        message: 'Aucune donnée initiale disponible',
+        count: 0
+      });
+    }
+
+    // Insérer les reviews initiales
+    let imported = 0;
+    for (const r of INITIAL_REVIEWS) {
+      try {
+        await storage.addReview({
+          id: r.id || randomUUID(),
+          batch_id: r.batch_id || randomUUID(),
+          texte: r.texte || '',
+          auteur_fictif: r.auteur || r.auteur_fictif || '',
+          prestation: r.prestation || '',
+          note: r.note || 5,
+          longueur: r.longueur || '',
+          added_at: r.added_at || new Date().toISOString(),
+          status: r.status || 'pending',
+          compte_google: r.compte_google || null,
+          posted_at: r.posted_at || null,
+          disappeared_at: r.disappeared_at || null,
+          last_checked_at: r.last_checked_at || null,
+          source: r.source || 'initial',
+          notes: r.notes || ''
+        });
+        imported++;
+      } catch (e) {
+        if (!e.message?.includes('duplicate') && !e.message?.includes('unique')) {
+          console.error('Error inserting review:', e.message);
+        }
+      }
+    }
+
+    return res.status(200).json({
+      message: `${imported} avis initialisés avec succès`,
+      count: imported
     });
   } catch (error) {
     console.error('Init error:', error);

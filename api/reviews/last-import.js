@@ -1,34 +1,39 @@
 const { requireRole } = require('../../auth');
-const storage = require('../../lib/storage');
+const { neon } = require('@neondatabase/serverless');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Admin only
-  const authResult = requireRole(req, ['admin']);
+  const authResult = await requireRole(req, ['admin']);
   if (!authResult.authorized) {
     return res.status(403).json({ error: authResult.error });
   }
 
   try {
-    const reviews = await storage.get('reviews') || [];
-    const lastBatchId = await storage.get('last_import_batch');
+    const sql = neon(process.env.DATABASE_URL);
 
-    if (!lastBatchId) {
+    // Trouver le dernier batch_id importé
+    const lastBatch = await sql`
+      SELECT batch_id FROM reviews
+      ORDER BY added_at DESC
+      LIMIT 1
+    `;
+
+    if (lastBatch.length === 0) {
       return res.status(200).json({ removed: 0 });
     }
 
-    const before = reviews.length;
-    const filtered = reviews.filter(r => r.batch_id !== lastBatchId);
-    
-    await storage.set('reviews', filtered);
-    await storage.del('last_import_batch');
+    const batchId = lastBatch[0].batch_id;
 
-    return res.status(200).json({ removed: before - filtered.length });
+    const result = await sql`
+      DELETE FROM reviews WHERE batch_id = ${batchId}
+    `;
+
+    return res.status(200).json({ removed: result.count ?? 0 });
   } catch (error) {
     console.error('Undo import error:', error);
     return res.status(500).json({ error: error.message });
   }
-}
+};

@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   }
 
   // Admin only
-  const authResult = requireRole(req, ['admin']);
+  const authResult = await requireRole(req, ['admin']);
   if (!authResult.authorized) {
     return res.status(403).json({ error: authResult.error });
   }
