@@ -1,6 +1,6 @@
-// Authentication system with Neon PostgreSQL sessions
+// Authentication system with Neon PostgreSQL sessions via @vercel/postgres
 const crypto = require('crypto');
-const { neon } = require('@neondatabase/serverless');
+const { sql } = require('@vercel/postgres');
 
 // Configuration des utilisateurs
 const USERS = {
@@ -14,26 +14,15 @@ const USERS = {
   }
 };
 
-function getDb() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL not configured');
-  }
-  return neon(process.env.DATABASE_URL);
-}
-
 function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
 async function login(username, password) {
   const user = USERS[username];
-  if (!user || user.password !== password) {
-    return null;
-  }
+  if (!user || user.password !== password) return null;
 
   const token = generateToken();
-  const sql = getDb();
-
   try {
     await sql`
       INSERT INTO sessions (token, username, role, created_at)
@@ -49,7 +38,6 @@ async function login(username, password) {
 
 async function logout(token) {
   if (!token) return;
-  const sql = getDb();
   try {
     await sql`DELETE FROM sessions WHERE token = ${token}`;
   } catch (e) {
@@ -59,19 +47,17 @@ async function logout(token) {
 
 async function verifyToken(token) {
   if (!token) return null;
-  const sql = getDb();
-
   try {
-    const result = await sql`
+    const { rows } = await sql`
       SELECT * FROM sessions
       WHERE token = ${token}
       AND created_at > NOW() - INTERVAL '24 hours'
     `;
-    if (result.length === 0) return null;
+    if (rows.length === 0) return null;
     return {
-      username: result[0].username,
-      role: result[0].role,
-      createdAt: result[0].created_at
+      username: rows[0].username,
+      role: rows[0].role,
+      createdAt: rows[0].created_at
     };
   } catch (e) {
     console.error('Token verification error:', e);
@@ -82,25 +68,17 @@ async function verifyToken(token) {
 async function requireAuth(req) {
   const token = req.headers.authorization?.replace('Bearer ', '') ||
                 getCookie(req, 'auth_token');
-
   const session = await verifyToken(token);
-  if (!session) {
-    return { authorized: false, error: 'Non autorisé' };
-  }
-
+  if (!session) return { authorized: false, error: 'Non autorisé' };
   return { authorized: true, session };
 }
 
 async function requireRole(req, allowedRoles) {
   const authResult = await requireAuth(req);
-  if (!authResult.authorized) {
-    return authResult;
-  }
-
+  if (!authResult.authorized) return authResult;
   if (!allowedRoles.includes(authResult.session.role)) {
     return { authorized: false, error: 'Accès refusé' };
   }
-
   return authResult;
 }
 
