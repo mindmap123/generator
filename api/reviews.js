@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
         return res.status(403).json({ error: authResult.error });
       }
       
-      const reviews = await storage.get('reviews') || [];
+      const reviews = await storage.getAllReviews();
       return res.status(200).json(reviews);
     }
 
@@ -25,32 +25,31 @@ module.exports = async function handler(req, res) {
       }
       
       const body = req.body;
-      const reviews = await storage.get('reviews') || [];
       const items = Array.isArray(body) ? body : [body];
       const batchId = randomUUID();
       const now = new Date().toISOString();
 
-      const added = items.map(r => ({
-        id: randomUUID(),
-        batch_id: batchId,
-        texte: r.texte || '',
-        auteur_fictif: r.auteur || r.auteur_fictif || '',
-        prestation: r.prestation || '',
-        note: r.note || 5,
-        longueur: r.longueur || '',
-        added_at: now,
-        status: r.status || 'pending',
-        compte_google: r.compte_google || null,
-        posted_at: r.posted_at || null,
-        disappeared_at: r.disappeared_at || null,
-        last_checked_at: r.last_checked_at || null,
-        source: r.source || 'generated',
-        notes: r.notes || ''
-      }));
-
-      reviews.push(...added);
-      await storage.set('reviews', reviews);
-      await storage.set('last_import_batch', batchId);
+      const added = [];
+      for (const r of items) {
+        const review = {
+          id: randomUUID(),
+          batch_id: batchId,
+          texte: r.texte || '',
+          auteur_fictif: r.auteur || r.auteur_fictif || '',
+          prestation: r.prestation || '',
+          note: r.note || 5,
+          longueur: r.longueur || '',
+          added_at: now,
+          status: r.status || 'pending',
+          compte_google: r.compte_google || null,
+          posted_at: r.posted_at || null,
+          source: r.source || 'generated',
+          notes: r.notes || ''
+        };
+        
+        const result = await storage.addReview(review);
+        added.push(result);
+      }
 
       return res.status(201).json(added);
     }

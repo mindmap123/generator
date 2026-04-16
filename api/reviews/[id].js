@@ -6,8 +6,6 @@ module.exports = async function handler(req, res) {
   const { id } = query;
 
   try {
-    const reviews = await storage.get('reviews') || [];
-
     // PUT update review - Admin & Poster
     if (method === 'PUT') {
       const authResult = requireRole(req, ['admin', 'poster']);
@@ -16,16 +14,14 @@ module.exports = async function handler(req, res) {
       }
       
       const body = req.body;
-      const idx = reviews.findIndex(r => r.id === id);
+      const review = await storage.getReviewById(id);
       
-      if (idx === -1) {
+      if (!review) {
         return res.status(404).json({ error: 'Not found' });
       }
 
-      reviews[idx] = { ...reviews[idx], ...body };
-      await storage.set('reviews', reviews);
-
-      return res.status(200).json(reviews[idx]);
+      const updated = await storage.updateReview(id, body);
+      return res.status(200).json(updated);
     }
 
     // DELETE single review - Admin only
@@ -35,8 +31,7 @@ module.exports = async function handler(req, res) {
         return res.status(403).json({ error: authResult.error });
       }
       
-      const filtered = reviews.filter(r => r.id !== id);
-      await storage.set('reviews', filtered);
+      await storage.deleteReview(id);
       return res.status(200).json({ ok: true });
     }
 
