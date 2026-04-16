@@ -42,6 +42,10 @@
       "destination": "/public/import-data.html"
     },
     {
+      "source": "/quick-import",
+      "destination": "/public/quick-import.html"
+    },
+    {
       "source": "/",
       "destination": "/public/review-generator.html"
     },

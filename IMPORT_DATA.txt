@@ -1,0 +1,51 @@
+=== INSTRUCTIONS POUR IMPORTER VOS DONNÉES ===
+
+1. Connectez-vous sur votre app Vercel avec wawa / wawa07
+
+2. Allez sur /dashboard
+
+3. Ouvrez la console du navigateur (F12)
+
+4. Copiez-collez ce code et appuyez sur Entrée :
+
+```javascript
+// Données à importer
+const data = {
+  "reviews": [
+    // COLLEZ ICI LE CONTENU DE data.json (juste le tableau reviews)
+  ]
+};
+
+// Import
+fetch('/api/reviews', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+  },
+  body: JSON.stringify(data.reviews)
+}).then(r => r.json()).then(result => {
+  console.log('✅ Importé:', result);
+  alert('Import réussi ! Rechargez la page.');
+  location.reload();
+}).catch(e => {
+  console.error('❌ Erreur:', e);
+  alert('Erreur: ' + e.message);
+});
+```
+
+=== OU MÉTHODE PLUS SIMPLE ===
+
+Attendez 2-3 minutes que Vercel finisse de déployer, puis :
+1. Allez sur https://votre-app.vercel.app/import-data
+2. Copiez TOUT le contenu de data.json
+3. Collez-le dans la zone de texte
+4. Cliquez sur "Importer"
+
+=== VÉRIFIER LE DÉPLOIEMENT ===
+
+1. Allez sur vercel.com
+2. Cliquez sur votre projet "generator"
+3. Onglet "Deployments"
+4. Le dernier déploiement doit être "Ready" (vert)
+5. Si c'est "Building", attendez qu'il finisse

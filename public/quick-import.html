@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quick Import</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+    button { padding: 10px 20px; background: #0f0; color: #000; border: none; cursor: pointer; font-weight: bold; }
+    #log { margin-top: 20px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>⚡ Quick Import</h1>
+  <p>Cliquez pour importer les données de data.json</p>
+  <button onclick="quickImport()">IMPORTER MAINTENANT</button>
+  <div id="log"></div>
+
+  <script>
+    const DATA = {"reviews":[{"id":"a9e8e15d-a092-47db-81a0-508c00a4a9d2","texte":"Le salon est très sympa, l'équipe au top, je recommande","auteur_fictif":"","prestation":"","note":5,"longueur":"","added_at":"2026-04-16T09:06:17.047Z","status":"posted","compte_google":"Flavie Giroux","posted_at":null,"source":"historical","notes":""},{"id":"16e71d34-6ac5-4452-8cdf-aca558299786","texte":"Super coupe je suis super contente merci beaucoup","auteur_fictif":"","prestation":"","note":5,"longueur":"","added_at":"2026-04-16T09:06:17.047Z","status":"posted","compte_google":"Aurore Georges","posted_at":null,"source":"historical","notes":""},{"id":"b9877a08-023e-4301-9631-9eb3693a148e","texte":"TOP TOP TOP","auteur_fictif":"","prestation":"","note":5,"longueur":"","added_at":"2026-04-16T09:06:17.047Z","status":"posted","compte_google":"Justine henry","posted_at":null,"source":"historical","notes":""}]};
+
+    function log(msg) {
+      document.getElementById('log').textContent += msg + '\n';
+    }
+
+    async function quickImport() {
+      log('🚀 Début de l\'import...');
+      
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          log('❌ Pas de token. Connectez-vous d\'abord sur /login');
+          return;
+        }
+
+        log(`📊 ${DATA.reviews.length} reviews à importer`);
+
+        const res = await fetch('/api/import-local-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(DATA)
+        });
+
+        const result = await res.json();
+        
+        if (res.ok) {
+          log('✅ ' + result.message);
+          log('🎉 Import terminé !');
+          setTimeout(() => location.href = '/dashboard', 2000);
+        } else {
+          log('❌ Erreur: ' + result.error);
+        }
+      } catch (e) {
+        log('❌ Erreur: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>
