@@ -1,6 +1,6 @@
 const { randomUUID } = require('crypto');
-const { requireRole } = require('../../auth');
-const storage = require('../../lib/storage');
+const { requireRole } = require('../auth');
+const storage = require('../lib/storage');
 
 module.exports = async function handler(req, res) {
   const { method } = req;
