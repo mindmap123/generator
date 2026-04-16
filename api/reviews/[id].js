@@ -1,12 +1,12 @@
-const { kv } = require('@vercel/kv');
 const { requireRole } = require('../../auth');
+const storage = require('../../lib/storage');
 
 module.exports = async function handler(req, res) {
   const { method, query } = req;
   const { id } = query;
 
   try {
-    const reviews = await kv.get('reviews') || [];
+    const reviews = await storage.get('reviews') || [];
 
     // PUT update review - Admin & Poster
     if (method === 'PUT') {
@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
       }
 
       reviews[idx] = { ...reviews[idx], ...body };
-      await kv.set('reviews', reviews);
+      await storage.set('reviews', reviews);
 
       return res.status(200).json(reviews[idx]);
     }
@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
       }
       
       const filtered = reviews.filter(r => r.id !== id);
-      await kv.set('reviews', filtered);
+      await storage.set('reviews', filtered);
       return res.status(200).json({ ok: true });
     }
 

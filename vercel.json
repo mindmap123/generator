@@ -1,63 +1,57 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/auth/login",
-      "dest": "/api/auth/login.js"
+      "source": "/api/auth/login",
+      "destination": "/api/auth/login.js"
     },
     {
-      "src": "/api/auth/logout",
-      "dest": "/api/auth/logout.js"
+      "source": "/api/auth/logout",
+      "destination": "/api/auth/logout.js"
     },
     {
-      "src": "/api/auth/me",
-      "dest": "/api/auth/me.js"
+      "source": "/api/auth/me",
+      "destination": "/api/auth/me.js"
     },
     {
-      "src": "/api/generate",
-      "dest": "/api/generate.js"
+      "source": "/api/generate",
+      "destination": "/api/generate.js"
     },
     {
-      "src": "/api/reviews/last-import",
-      "dest": "/api/reviews/last-import.js"
+      "source": "/api/reviews/last-import",
+      "destination": "/api/reviews/last-import.js"
     },
     {
-      "src": "/api/reviews/([^/]+)",
-      "dest": "/api/reviews/[id].js?id=$1"
+      "source": "/api/reviews/:id",
+      "destination": "/api/reviews/[id].js"
     },
     {
-      "src": "/api/reviews",
-      "dest": "/api/reviews.js"
+      "source": "/api/reviews",
+      "destination": "/api/reviews.js"
     },
     {
-      "src": "/login",
-      "dest": "/public/login.html"
+      "source": "/login",
+      "destination": "/public/login.html"
     },
     {
-      "src": "/",
-      "dest": "/public/review-generator.html"
+      "source": "/",
+      "destination": "/public/review-generator.html"
     },
     {
-      "src": "/dashboard",
-      "dest": "/public/dashboard.html"
+      "source": "/dashboard",
+      "destination": "/public/dashboard.html"
     },
     {
-      "src": "/poster",
-      "dest": "/public/poster.html"
+      "source": "/poster",
+      "destination": "/public/poster.html"
     },
     {
-      "src": "/admin",
-      "dest": "/public/admin.html"
+      "source": "/admin",
+      "destination": "/public/admin.html"
     },
     {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "source": "/auth-client.js",
+      "destination": "/public/auth-client.js"
     }
   ]
 }

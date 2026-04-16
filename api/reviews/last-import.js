@@ -1,5 +1,5 @@
-const { kv } = require('@vercel/kv');
 const { requireRole } = require('../../auth');
+const storage = require('../../lib/storage');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'DELETE') {
@@ -13,8 +13,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const reviews = await kv.get('reviews') || [];
-    const lastBatchId = await kv.get('last_import_batch');
+    const reviews = await storage.get('reviews') || [];
+    const lastBatchId = await storage.get('last_import_batch');
 
     if (!lastBatchId) {
       return res.status(200).json({ removed: 0 });
@@ -23,8 +23,8 @@ module.exports = async function handler(req, res) {
     const before = reviews.length;
     const filtered = reviews.filter(r => r.batch_id !== lastBatchId);
     
-    await kv.set('reviews', filtered);
-    await kv.del('last_import_batch');
+    await storage.set('reviews', filtered);
+    await storage.del('last_import_batch');
 
     return res.status(200).json({ removed: before - filtered.length });
   } catch (error) {

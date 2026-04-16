@@ -1,6 +1,6 @@
-const { kv } = require('@vercel/kv');
 const { randomUUID } = require('crypto');
 const { requireRole } = require('../../auth');
+const storage = require('../../lib/storage');
 
 module.exports = async function handler(req, res) {
   const { method } = req;
@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
         return res.status(403).json({ error: authResult.error });
       }
       
-      const reviews = await kv.get('reviews') || [];
+      const reviews = await storage.get('reviews') || [];
       return res.status(200).json(reviews);
     }
 
@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
       }
       
       const body = req.body;
-      const reviews = await kv.get('reviews') || [];
+      const reviews = await storage.get('reviews') || [];
       const items = Array.isArray(body) ? body : [body];
       const batchId = randomUUID();
       const now = new Date().toISOString();
@@ -49,8 +49,8 @@ module.exports = async function handler(req, res) {
       }));
 
       reviews.push(...added);
-      await kv.set('reviews', reviews);
-      await kv.set('last_import_batch', batchId);
+      await storage.set('reviews', reviews);
+      await storage.set('last_import_batch', batchId);
 
       return res.status(201).json(added);
     }
