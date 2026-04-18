@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
         'X-Title': 'Avis Generator'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-haiku',
+        model: 'openai/gpt-4o-mini',
         messages: [
           {
             role: 'user',
