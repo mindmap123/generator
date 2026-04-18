@@ -1,6 +1,7 @@
-// Authentication system with Neon PostgreSQL sessions via @vercel/postgres
+// Authentication system with Neon PostgreSQL sessions via @neondatabase/serverless
 const crypto = require('crypto');
-const { sql } = require('@vercel/postgres');
+const { neon } = require('@neondatabase/serverless');
+const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL);
 
 // Configuration des utilisateurs
 const USERS = {
@@ -48,7 +49,7 @@ async function logout(token) {
 async function verifyToken(token) {
   if (!token) return null;
   try {
-    const { rows } = await sql`
+    const rows = await sql`
       SELECT * FROM sessions
       WHERE token = ${token}
       AND created_at > NOW() - INTERVAL '24 hours'
