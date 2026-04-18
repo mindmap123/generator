@@ -28,6 +28,10 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'deepseek/deepseek-chat',
+        provider: {
+          order: ['DeepSeek', 'deepinfra', 'novita'],
+          allow_fallbacks: true
+        },
         messages: [
           {
             role: 'user',
