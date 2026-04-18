@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
         'X-Title': 'Avis Generator'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
+        model: 'anthropic/claude-3.5-haiku',
         messages: [
           {
             role: 'user',
