@@ -29,8 +29,8 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         model: 'deepseek/deepseek-chat',
         provider: {
-          order: ['DeepSeek', 'DeepInfra', 'Novita'],
-          allow_fallbacks: true
+          order: ['DeepInfra', 'Novita'],
+          allow_fallbacks: false
         },
         messages: [
           {
