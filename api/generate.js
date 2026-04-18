@@ -18,14 +18,16 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.VERCEL_URL || 'https://generator-reviews.vercel.app',
+        'X-Title': 'Avis Generator'
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'minimax/minimax-01',
         messages: [
           {
             role: 'user',
