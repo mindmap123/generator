@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
         'X-Title': 'Avis Generator'
       },
       body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
+        model: 'deepseek/deepseek-chat',
         messages: [
           {
             role: 'user',
